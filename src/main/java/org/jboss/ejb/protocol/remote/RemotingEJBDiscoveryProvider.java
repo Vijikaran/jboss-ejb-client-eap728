@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.SSLContext;
 
 import org.jboss.ejb._private.Logs;
+import org.jboss.ejb.client.DiscoveryNodeSelector;
+import org.jboss.ejb.client.EJBClientCluster;
 import org.jboss.ejb.client.EJBClientConnection;
 import org.jboss.ejb.client.EJBClientContext;
 import org.jboss.ejb.client.EJBModuleIdentifier;
@@ -179,10 +182,23 @@ final class RemotingEJBDiscoveryProvider implements DiscoveryProvider, Discovere
         // also establish cluster nodes if known
         for (Map.Entry<String, Set<String>> entry : clusterNodes.entrySet()) {
             final String clusterName = entry.getKey();
-            final Set<String> nodeSet = entry.getValue();
+            final Set<String> nodeSet = new LinkedHashSet<>(entry.getValue());
+
+            if(nodeSet.isEmpty()) {
+                continue;
+            }
+
+            final EJBClientCluster configuredCluster = ejbClientContext.getInitialConfiguredCluster(clusterName);
+            final DiscoveryNodeSelector configuredDiscoveryNodeSelector = (configuredCluster != null ? configuredCluster.getDiscoveryNodeSelector() : null);
+            final DiscoveryNodeSelector discoveryNodeSelector = (configuredDiscoveryNodeSelector != null ? configuredDiscoveryNodeSelector : DiscoveryNodeSelector.FIRST_AVAILABLE);
             int maxConnections = ejbClientContext.getMaximumConnectedClusterNodes();
-            nodeLoop: for (String nodeName : nodeSet) {
+            nodeLoop: do {
                 if (maxConnections <= 0) break;
+
+                // Let the DiscoveryNodeSelector determine which node to connect to
+                final String nodeName = discoveryNodeSelector.selectNode(clusterName, nodeSet.toArray(new String[nodeSet.size()]));
+                nodeSet.remove(nodeName);
+
                 final NodeInformation nodeInformation = nodes.get(nodeName);
                 if (nodeInformation != null) {
                     final NodeInformation.ClusterNodeInformation clusterInfo = nodeInformation.getClustersByName().get(clusterName);
@@ -226,7 +242,7 @@ final class RemotingEJBDiscoveryProvider implements DiscoveryProvider, Discovere
                         }
                     }
                 }
-            }
+            } while (!nodeSet.isEmpty());
         }
         // special second pass - retry everything because all were marked failed
         if (discoveryConnections && ! ok) {

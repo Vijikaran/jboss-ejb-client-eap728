@@ -31,6 +31,7 @@ public final class EJBClientCluster {
     private final long maximumConnectedNodes;
     private final long connectTimeoutMilliseconds;
     private final ClusterNodeSelector clusterNodeSelector;
+    private final DiscoveryNodeSelector discoveryNodeSelector;
     private final AuthenticationConfiguration overrideConfiguration;
 
     EJBClientCluster(final Builder builder) {
@@ -38,6 +39,7 @@ public final class EJBClientCluster {
         maximumConnectedNodes = builder.maximumConnectedNodes;
         connectTimeoutMilliseconds = builder.connectTimeoutMilliseconds;
         clusterNodeSelector = builder.clusterNodeSelector;
+        discoveryNodeSelector = builder.discoveryNodeSelector;
         overrideConfiguration = builder.overrideConfiguration;
     }
 
@@ -78,6 +80,15 @@ public final class EJBClientCluster {
     }
 
     /**
+     * Get the discovery node selector to use.
+     *
+     * @return the disvoery node selector, or {@code null} if the default selector from the context should be used
+     */
+    public DiscoveryNodeSelector getDiscoveryNodeSelector() {
+        return discoveryNodeSelector;
+    }
+
+    /**
      * Get the overriding authentication configuration in use for nodes in this cluster, overriding the caller's default.
      *
      * @return the authentication configuration to use or {@code null} to use the standard inherited authentication configuration
@@ -111,6 +122,7 @@ public final class EJBClientCluster {
         private long maximumConnectedNodes = 0;
         private long connectTimeoutMilliseconds = -1L;
         private ClusterNodeSelector clusterNodeSelector;
+        private DiscoveryNodeSelector discoveryNodeSelector;
         private AuthenticationConfiguration overrideConfiguration;
 
         /**
@@ -139,6 +151,11 @@ public final class EJBClientCluster {
 
         public Builder setClusterNodeSelector(final ClusterNodeSelector clusterNodeSelector) {
             this.clusterNodeSelector = clusterNodeSelector;
+            return this;
+        }
+
+        public Builder setDiscoveryNodeSelector(final DiscoveryNodeSelector discoveryNodeSelector) {
+            this.discoveryNodeSelector = discoveryNodeSelector;
             return this;
         }
 

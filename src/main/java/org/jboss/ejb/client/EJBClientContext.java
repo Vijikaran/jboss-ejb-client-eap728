@@ -510,6 +510,15 @@ public final class EJBClientContext extends Attachable implements Contextual<EJB
     }
 
     /**
+     * Get the initially configured cluster by the requested name for this context.
+     *
+     * @return the initially configured cluster for the requested name for this context, or null if not available.
+     */
+    public EJBClientCluster getInitialConfiguredCluster(String clusterName) {
+        return configuredClusters.get(clusterName);
+    }
+
+    /**
      * Get the maximum connected cluster nodes setting, for connection-based protocols which support eager connection.
      *
      * @return the maximum connected cluster nodes count

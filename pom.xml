@@ -29,8 +29,7 @@
     </parent>
 
     <artifactId>jboss-ejb-client</artifactId>
-    <version>4.0.28.Final</version>
-
+    <version>4.0.20.Final_discovery_node_selector-SNAPSHOT</version>
     <name>JBoss EJB client</name>
     <description>Client library for EJB applications working against Wildfly</description>
 
